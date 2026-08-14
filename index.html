@@ -135,6 +135,7 @@ table.dtbl tbody tr:hover{background:var(--bg);}
 table.dtbl tbody tr:last-child td{border-bottom:none;}
 
 .charts-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(420px,1fr)); gap:14px;}
+.ch-wide{grid-column:1 / -1;}
 .ch{background:#fff; border:1px solid var(--border); border-radius:10px; padding:16px; height:340px; display:flex; flex-direction:column;}
 .ch h3{font-size:13px; font-weight:800; margin-bottom:8px;}
 .ch-sub{font-size:10.5px; color:var(--tx-muted); font-weight:600; margin:-4px 0 8px; line-height:1.35;}
@@ -219,6 +220,9 @@ table.tgrade-uni thead th.stcol{z-index:6;}
 .stc-flex>div:nth-child(1){flex:0 0 110px;}
 .stc-flex>div:nth-child(2){flex:0 0 210px;}
 .stc-flex>div:nth-child(3){flex:0 0 82px;}
+.stc-flex.stc-2col>div:nth-child(1){flex:0 0 320px; justify-content:flex-start; padding-left:10px;}
+.stc-flex.stc-2col>div:nth-child(2){flex:0 0 82px;}
+thead .stc-flex.stc-2col>div:nth-child(1){justify-content:flex-start; padding-left:10px;}
 thead .stc-flex>div{padding:6px 4px; border-right:1px solid rgba(255,255,255,.25); white-space:normal; line-height:1.25;}
 
 table.tgrade{border-collapse:separate; border-spacing:0; font-size:11.5px;}
@@ -231,16 +235,17 @@ table.tgrade tbody td.daycell.weekend:hover{background:#E5EBF2;}
 .op-exc{color:var(--blue-dark);} .op-ok{color:var(--tx-primary);} .op-warn{color:var(--amber);} .op-crit{color:var(--red);}
 
 .tgrade-frozen th, .tgrade-frozen td{white-space:nowrap;}
-.tgrade-frozen col.c-nome{width:150px;} .tgrade-frozen col.c-uni{width:90px;} .tgrade-frozen col.c-setor{width:100px;} .tgrade-frozen col.c-cargo{width:110px;} .tgrade-frozen col.c-turno{width:70px;}
+.tgrade-frozen col.c-nome{width:150px;} .tgrade-frozen col.c-uni{width:90px;} .tgrade-frozen col.c-cargo{width:150px;} .tgrade-frozen col.c-turno{width:80px;}
 .td-nome{font-weight:600; color:#0F1B2D; text-align:left !important; max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .td-uni{text-align:center; font-weight:700; color:var(--indigo); font-size:11.5px;}
-.td-cargo{text-align:center; font-size:11.5px; font-weight:600; color:var(--sb-text); max-width:110px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.td-cargo{text-align:left; padding-left:6px !important; font-size:11.5px; font-weight:600; color:var(--sb-text); max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .td-turno{text-align:center; font-size:11.5px; font-weight:600; color:var(--blue); max-width:70px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 
 table.tgrade tbody tr.grp-header td{background:var(--indigo-mid); color:#fff; font-weight:800; font-size:12px; padding:7px 10px; text-align:left;}
 table.tgrade tbody tr.tr-res-label td{background:#F7F9FB;}
 
 .tr-res-label{text-align:right !important; font-weight:800; padding-right:10px !important; background:#F7F9FB;}
+.tr-res-val{text-align:center !important; font-weight:800; background:#F7F9FB;}
 .r-fer{color:#9900FF;} .r-ferias{color:#548235;} .r-folga{color:#000000;} .r-desl{color:#F1C232;}
 .r-fi{color:#ED0000;} .r-fj{color:#ED7D31;} .r-pres{color:#1A56DB;} .r-pct{color:#1E3A6E;}
 
@@ -402,10 +407,10 @@ button, .sb-item, select{min-height:36px;}
       <section class="psec" id="sec-graficos">
         <div class="psec-head"><h2>Gráficos</h2><span class="psec-note" id="graficos-note">Indicadores de presença — período do filtro atual</span></div>
         <div class="charts-grid">
-          <div class="ch"><h3>% Presença por Unidade</h3><canvas id="chPresUnidade"></canvas></div>
-          <div class="ch"><h3>Presenças × Faltas (FJ+FI) por Unidade</h3><canvas id="chPresFaltas"></canvas></div>
-          <div class="ch"><h3>% Presença por Turno</h3><canvas id="chPresTurno"></canvas></div>
-          <div class="ch"><h3>% Presença por Cargo</h3><canvas id="chPresCargo"></canvas></div>
+          <div class="ch"><h3>% Presença por Unidade</h3><div class="ch-sub">Comparado à média (linha vermelha)</div><canvas id="chPresUnidade"></canvas></div>
+          <div class="ch"><h3>Presenças × Faltas (FJ+FI) por Unidade</h3><div class="ch-sub">Volume absoluto de registros no período</div><canvas id="chPresFaltas"></canvas></div>
+          <div class="ch"><h3>% Presença por Turno</h3><div class="ch-sub">Comparado à média (linha vermelha)</div><canvas id="chPresTurno"></canvas></div>
+          <div class="ch ch-wide"><h3>% Presença por Cargo</h3><div class="ch-sub" id="chPresCargo-sub">Ordenado do menor para o maior % de presença</div><canvas id="chPresCargo"></canvas></div>
         </div>
       </section>
 
@@ -744,7 +749,7 @@ function renderGrade(){
   const folgaGeralByDay = {};
   dias.forEach(iso=>{ folgaGeralByDay[iso] = diaTemFolgaGeral(allColab, iso); });
 
-  let fh = '<table class="tgrade tgrade-frozen"><colgroup><col class="c-nome"><col class="c-uni"><col class="c-cargo"><col class="c-turno"></colgroup><thead><tr><th style="text-align:left;padding-left:8px;">Colaborador</th><th>Unidade</th><th>Cargo</th><th>Turno</th></tr></thead><tbody>';
+  let fh = '<table class="tgrade tgrade-frozen"><colgroup><col class="c-nome"><col class="c-uni"><col class="c-cargo"><col class="c-turno"></colgroup><thead><tr><th>Colaborador</th><th>Unidade</th><th>Cargo</th><th>Turno</th></tr></thead><tbody>';
   let sh = '<table class="tgrade tgrade-scroll"><thead><tr>';
   dias.forEach(iso=>{
     const [y,m,d] = iso.split('-');
@@ -797,16 +802,16 @@ function renderGrade(){
           });
           const base = p+fj+fi;
           const pct = base>0 ? (p/base*100).toFixed(1) : '0.0';
-          rowHtml += '<td class="tr-res-label '+rd.cls+'">'+pct+'%</td>';
+          rowHtml += '<td class="tr-res-val '+rd.cls+'">'+pct+'%</td>';
         } else {
-          rowHtml += '<td class="tr-res-label '+rd.cls+'">'+(dayCounts[i]||'')+'</td>';
+          rowHtml += '<td class="tr-res-val '+rd.cls+'">'+(dayCounts[i]||'')+'</td>';
         }
       });
       const monthTotal = rd.key==='PCT' ? null : dayCounts.reduce((a,b)=>a+b,0);
       const totColsForKey = {P:0, FJ:1, FI:2, FOLGA:3};
       const targetCol = totColsForKey.hasOwnProperty(rd.key) ? totColsForKey[rd.key] : -1;
       for(let ci=0; ci<7; ci++){
-        rowHtml += (ci===targetCol && monthTotal!==null) ? '<td>'+monthTotal+'</td>' : '<td class="tr-res-label" style="color:var(--tx-muted);">—</td>';
+        rowHtml += (ci===targetCol && monthTotal!==null) ? '<td class="tr-res-val">'+monthTotal+'</td>' : '<td class="tr-res-val" style="color:var(--tx-muted);">—</td>';
       }
       rowHtml += '</tr>';
       sh += rowHtml;
@@ -923,7 +928,7 @@ function renderOperacional(){
 
   let th = '<table class="tgrade tgrade-uni"><colgroup><col style="width:402px">';
   dias.forEach(()=>{ th += '<col style="width:34px">'; });
-  th += '<col style="width:74px"><col style="width:74px"></colgroup><thead><tr><th class="stcol"><div class="stc-flex"><div>Cargo</div><div>Solicitado</div></div></th>';
+  th += '<col style="width:74px"><col style="width:74px"></colgroup><thead><tr><th class="stcol"><div class="stc-flex stc-2col"><div>Cargo</div><div>Solicitado</div></div></th>';
   dias.forEach(iso=>{
     const [y,m,d] = iso.split('-');
     const wd = WEEKDAY_PT[weekdayOf(+y,+m,+d)];
@@ -972,7 +977,7 @@ function renderOperacional(){
     });
     const mediaTot = diasComDadoTotal>0 ? somaTotalRealizado/diasComDadoTotal : 0;
     const pctMedioTot = turnoSolicTotal>0 ? (mediaTot/turnoSolicTotal*100) : 100;
-    sh += '<tr class="tr-res-label" style="color:var(--indigo);"><td class="stcol"><div class="stc-flex"><div style="flex-basis:320px; justify-content:flex-end; padding-right:10px; font-weight:800;">TOTAL '+t.turno+'</div><div style="flex-basis:82px; font-weight:800;">'+turnoSolicTotal+'</div></div></td>'+totCells+'<td style="font-weight:800;">'+mediaTot.toFixed(1)+'</td><td class="'+classCellOperacional(pctMedioTot)+'" style="font-weight:800;">'+pctMedioTot.toFixed(0)+'%</td></tr>';
+    sh += '<tr class="tr-res-label" style="color:var(--indigo);"><td class="stcol"><div class="stc-flex stc-2col"><div style="flex-basis:320px; justify-content:flex-end; padding-right:10px; font-weight:800;">TOTAL '+t.turno+'</div><div style="flex-basis:82px; font-weight:800;">'+turnoSolicTotal+'</div></div></td>'+totCells+'<td style="font-weight:800;">'+mediaTot.toFixed(1)+'</td><td class="'+classCellOperacional(pctMedioTot)+'" style="font-weight:800;">'+pctMedioTot.toFixed(0)+'%</td></tr>';
 
     gruposFiltrados.forEach(gr=>{
       let somaRealizado=0, diasComDado=0;
@@ -980,7 +985,7 @@ function renderOperacional(){
       const media = diasComDado>0 ? (somaRealizado/diasComDado) : 0;
       const pctMedio = gr.solicitado>0 ? (media/gr.solicitado*100) : 100;
 
-      sh += '<tr><td class="stcol"><div class="stc-flex"><div style="font-weight:700; color:'+cargoColor(gr.cargo)+';" title="'+gr.cargo+'">'+gr.cargo+'</div><div style="font-weight:800; color:var(--indigo);">'+gr.solicitado+'</div></div></td>';
+      sh += '<tr><td class="stcol"><div class="stc-flex stc-2col"><div style="font-weight:700; color:'+cargoColor(gr.cargo)+';" title="'+gr.cargo+'">'+gr.cargo+'</div><div style="font-weight:800; color:var(--indigo);">'+gr.solicitado+'</div></div></td>';
       dias.forEach(iso=>{
         const real = gr.realizado[iso] || 0;
         if(iso > REF_DATE){
@@ -1097,7 +1102,7 @@ function renderCharts(){
   if(rows.length===0){
     ['chPresUnidade','chPresFaltas','chPresTurno','chPresCargo'].forEach(id=>{
       const el = document.getElementById(id);
-      if(el){ const wrap = el.closest('.ch'); wrap.innerHTML = noDataBlock('Nenhum colaborador corresponde à combinação de filtros selecionada.'); }
+      if(el){ const wrap = el.closest('.ch'); wrap.style.height=''; wrap.innerHTML = noDataBlock('Nenhum colaborador corresponde à combinação de filtros selecionada.'); }
     });
     return;
   }
@@ -1119,10 +1124,10 @@ function renderCharts(){
     charts.presUnidade = new Chart(document.getElementById('chPresUnidade'), {
       type:'bar',
       data:{labels, datasets:[
-        {type:'bar', label:'% Presença', data:vals, backgroundColor:'#0079C2', borderRadius:4, order:2},
+        {type:'bar', label:'% Presença', data:vals, backgroundColor:'#0079C2', borderRadius:4, order:2, maxBarThickness:90, barPercentage:0.5, categoryPercentage:0.6},
         {type:'line', label:'Média', data:labels.map(()=>media), borderColor:'#C0281C', borderWidth:1.5, pointRadius:0, order:1, fill:false}
       ]},
-      options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}}
+      options:{responsive:true, maintainAspectRatio:false, layout:{padding:{top:16}}, scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}}
     });
   });
 
@@ -1134,11 +1139,11 @@ function renderCharts(){
     const mediaPres = pres.length ? pres.reduce((a,b)=>a+b,0)/pres.length : 0;
     charts.presFaltas = new Chart(document.getElementById('chPresFaltas'), {
       data:{labels, datasets:[
-        {type:'bar', label:'Presenças', data:pres, backgroundColor:'#0079C2', borderRadius:4},
-        {type:'bar', label:'Faltas (FJ+FI)', data:faltas, backgroundColor:'#C0281C', borderRadius:4},
+        {type:'bar', label:'Presenças', data:pres, backgroundColor:'#0079C2', borderRadius:4, maxBarThickness:60, barPercentage:0.5, categoryPercentage:0.6},
+        {type:'bar', label:'Faltas (FJ+FI)', data:faltas, backgroundColor:'#C0281C', borderRadius:4, maxBarThickness:60, barPercentage:0.5, categoryPercentage:0.6},
         {type:'line', label:'Média Presenças', data:labels.map(()=>mediaPres), borderColor:'#1E3A6E', borderWidth:1.5, pointRadius:0, fill:false}
       ]},
-      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}}
+      options:{responsive:true, maintainAspectRatio:false, layout:{padding:{top:16}}, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}}
     });
   });
 
@@ -1149,24 +1154,43 @@ function renderCharts(){
     const media = avg(byTurno,'pctPresenca');
     charts.presTurno = new Chart(document.getElementById('chPresTurno'), {
       data:{labels, datasets:[
-        {type:'bar', label:'% Presença', data:vals, backgroundColor:'#2D5099', borderRadius:4, order:2},
+        {type:'bar', label:'% Presença', data:vals, backgroundColor:'#2D5099', borderRadius:4, order:2, maxBarThickness:56, barPercentage:0.55, categoryPercentage:0.65},
         {type:'line', label:'Média', data:labels.map(()=>media), borderColor:'#C0281C', borderWidth:1.5, pointRadius:0, order:1, fill:false}
       ]},
-      options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}}
+      options:{responsive:true, maintainAspectRatio:false, layout:{padding:{top:16}}, scales:{y:{beginAtZero:true, max:100}}, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}}
     });
   });
 
+  /* "% Presença por Cargo" pode ter dezenas de cargos — em barra vertical isso
+     sempre resulta em rótulos do eixo x girados e ilegíveis, e nos números
+     sobrepostos uns nos outros. Em vez de truncar dados operacionais reais
+     (cada cargo aqui é informação de gestão de presença), a solução de design
+     é trocar para barra horizontal (uma linha por cargo, sem rotação de texto),
+     ordenar do menor para o maior % — destacando primeiro quem precisa de
+     atenção — e dar ao card altura dinâmica + a largura cheia da grade (classe
+     .ch-wide) para que caiba confortavelmente até ~50 cargos sem espremer.
+  */
   renderChartSafe('chPresCargo','% Presença por Cargo',()=>{
     destroyChart('presCargo');
-    const labels = Object.keys(byCargo);
+    const labels = Object.keys(byCargo).sort((a,b)=> byCargo[a].pctPresenca - byCargo[b].pctPresenca);
     const vals = labels.map(k=>byCargo[k].pctPresenca);
     const media = avg(byCargo,'pctPresenca');
-    charts.presCargo = new Chart(document.getElementById('chPresCargo'), {
+    const canvas = document.getElementById('chPresCargo');
+    const cardEl = canvas.closest('.ch');
+    if(cardEl) cardEl.style.height = Math.max(340, labels.length*24+90)+'px';
+    const subEl = document.getElementById('chPresCargo-sub');
+    if(subEl) subEl.textContent = 'Ordenado do menor para o maior % de presença · '+labels.length+' cargo(s) no filtro atual · média: '+media.toFixed(1)+'%';
+    charts.presCargo = new Chart(canvas, {
+      type:'bar', indexAxis:'y',
       data:{labels, datasets:[
-        {type:'bar', label:'% Presença', data:vals, backgroundColor:'#0E7A43', borderRadius:4, order:2},
-        {type:'line', label:'Média', data:labels.map(()=>media), borderColor:'#C0281C', borderWidth:1.5, pointRadius:0, order:1, fill:false}
+        {type:'bar', label:'% Presença', data:vals, backgroundColor:vals.map(v=> v<70?'#C0281C': v<90?'#B45309':'#0E7A43'), borderRadius:4, order:2, maxBarThickness:20, barPercentage:0.6, categoryPercentage:0.75},
+        {type:'line', label:'Média', data:labels.map(()=>media), borderColor:'#1E3A6E', borderWidth:1.5, pointRadius:0, order:1, fill:false}
       ]},
-      options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true, max:100}, x:{ticks:{font:{size:9.5}}}}, plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}}
+      options:{
+        responsive:true, maintainAspectRatio:false, indexAxis:'y', layout:{padding:{right:34}},
+        scales:{x:{beginAtZero:true, max:100, title:{display:true, text:'% Presença', font:{size:10.5, weight:600}, color:'#5C6B7E'}}, y:{ticks:{font:{size:10.5}}}},
+        plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}}}}
+      }
     });
   });
 }
