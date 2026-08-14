@@ -1274,9 +1274,9 @@ function renderMovimentacoes(){
     mov.slice().sort((a,b)=> a.data.localeCompare(b.data)).forEach(m=>{
       const mesLabel = mesLabelFromIso(m.data);
       if(m.tipo==='Admissão'){
-        rowsHtml += '<tr><td>'+m.unidade+'</td><td>'+mesLabel+'</td><td><span class="mov-name-chip mov-admit">'+m.colaborador+'</span></td><td>'+fmtDateShort(m.data)+'</td><td>—</td><td>—</td></tr>';
+        rowsHtml += '<tr><td>'+m.unidade+'</td><td>'+mesLabel+'</td><td><span class="mov-name-chip mov-admit">'+m.colaborador+'</span></td><td><span class="mov-name-chip mov-admit">'+fmtDateShort(m.data)+'</span></td><td>—</td><td>—</td></tr>';
       } else {
-        rowsHtml += '<tr><td>'+m.unidade+'</td><td>'+mesLabel+'</td><td>—</td><td>—</td><td><span class="mov-name-chip mov-demit">'+m.colaborador+'</span></td><td>'+fmtDateShort(m.data)+'</td></tr>';
+        rowsHtml += '<tr><td>'+m.unidade+'</td><td>'+mesLabel+'</td><td>—</td><td>—</td><td><span class="mov-name-chip mov-demit">'+m.colaborador+'</span></td><td><span class="mov-name-chip mov-demit">'+fmtDateShort(m.data)+'</span></td></tr>';
       }
     });
   }
@@ -1732,7 +1732,6 @@ window.addEventListener('DOMContentLoaded', ()=>{
   setTimeout(forceResizeCharts, 500);
   setTimeout(forceResizeCharts, 1200);
 });
-
 </script>
 </body>
 </html>
